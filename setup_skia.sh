@@ -25,5 +25,5 @@ pushd skia > /dev/null
         skia_enable_ganesh = true \
         skia_enable_gpu = true \
         extra_cflags = [ \"-MDd\" ]"
-        ninja -C out/Static
+    ninja -C out/Static
 popd
