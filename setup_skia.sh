@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 if [ ! -d "skia" ] ; then
-	git clone https://skia.googlesource.com/skia.git skia
+    git clone https://skia.googlesource.com/skia.git skia
 else
-	pushd skia
-		git reset --hard HEAD
-		git checkout main
-		git pull origin
-	popd
+    pushd skia
+        git reset --hard HEAD
+        git checkout main
+        git pull origin
+    popd
 fi
 
 pushd skia > /dev/null
