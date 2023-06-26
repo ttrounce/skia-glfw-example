@@ -29,114 +29,114 @@
 
 struct Skia
 {
-	std::unique_ptr<SkSurface> surface;
-	std::unique_ptr<GrDirectContext> context;
+    std::unique_ptr<SkSurface> surface;
+    std::unique_ptr<GrDirectContext> context;
 
-	Skia() {}
+    Skia() {}
 
-	void init(int w, int h)
-	{
-		auto opts = GrContextOptions{};
-		opts.fAllowMSAAOnNewIntel = true;
+    void init(int w, int h)
+    {
+        auto opts = GrContextOptions{};
+        opts.fAllowMSAAOnNewIntel = true;
 
-		auto interface = GrGLMakeNativeInterface();
-		context = std::unique_ptr<GrDirectContext>(GrDirectContext::MakeGL(interface, opts).release());
+        auto interface = GrGLMakeNativeInterface();
+        context = std::unique_ptr<GrDirectContext>(GrDirectContext::MakeGL(interface, opts).release());
 
-		GrGLFramebufferInfo fbi{};
-		fbi.fFBOID = 0;
-		fbi.fFormat = GL_RGBA8;
+        GrGLFramebufferInfo fbi{};
+        fbi.fFBOID = 0;
+        fbi.fFormat = GL_RGBA8;
 
-		auto render_target = GrBackendRenderTarget{
-			w, h,
-			SAMPLES,
-			0,
-			fbi
-		};
+        auto render_target = GrBackendRenderTarget{
+            w, h,
+            SAMPLES,
+            0,
+            fbi
+        };
 
-		surface = std::unique_ptr<SkSurface>(SkSurfaces::WrapBackendRenderTarget(
-			context.get(),
-			render_target,
-			kBottomLeft_GrSurfaceOrigin,
-			kRGBA_8888_SkColorType,
-			nullptr,
-			nullptr
-		).release());
+        surface = std::unique_ptr<SkSurface>(SkSurfaces::WrapBackendRenderTarget(
+            context.get(),
+            render_target,
+            kBottomLeft_GrSurfaceOrigin,
+            kRGBA_8888_SkColorType,
+            nullptr,
+            nullptr
+        ).release());
 
-		if (!surface)
-			throw std::runtime_error{ "SkSurface is null" };
-	}
+        if (!surface)
+            throw std::runtime_error{ "SkSurface is null" };
+    }
 };
 
 struct GlfwApplication
 {
-	GLFWwindow* window;
+    GLFWwindow* window;
 
-	GlfwApplication(const GlfwApplication& copy) = delete;
-	GlfwApplication& operator=(const GlfwApplication& copy) = delete;
+    GlfwApplication(const GlfwApplication& copy) = delete;
+    GlfwApplication& operator=(const GlfwApplication& copy) = delete;
 
-	GlfwApplication() {}
-	~GlfwApplication()
-	{
-		glfwTerminate();
-	}
+    GlfwApplication() {}
+    ~GlfwApplication()
+    {
+        glfwTerminate();
+    }
 
-	void init(int w, int h, const std::string& title)
-	{
-		if (!glfwInit())
-			throw std::runtime_error{ "GLFW no init" };
+    void init(int w, int h, const std::string& title)
+    {
+        if (!glfwInit())
+            throw std::runtime_error{ "GLFW no init" };
 
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		glfwWindowHint(GLFW_SAMPLES, SAMPLES);
-		glfwWindowHint(GLFW_STENCIL_BITS, 0);
-		glfwWindowHint(GLFW_DEPTH_BITS, 0);
+        glfwWindowHint(GLFW_SAMPLES, SAMPLES);
+        glfwWindowHint(GLFW_STENCIL_BITS, 0);
+        glfwWindowHint(GLFW_DEPTH_BITS, 0);
 
-		window = glfwCreateWindow(w, h, title.c_str(), nullptr, nullptr);
+        window = glfwCreateWindow(w, h, title.c_str(), nullptr, nullptr);
 
-		if (!window)
-			throw std::runtime_error{ "GLFW no window" };
+        if (!window)
+            throw std::runtime_error{ "GLFW no window" };
 
-		glfwMakeContextCurrent(window);
-	}
+        glfwMakeContextCurrent(window);
+    }
 
-	bool is_running()
-	{
-		return !glfwWindowShouldClose(window);
-	}
+    bool is_running()
+    {
+        return !glfwWindowShouldClose(window);
+    }
 
-	void update()
-	{
-		glfwPollEvents();
-		glfwSwapBuffers(window);
-	}
+    void update()
+    {
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
 };
 
 int main()
 {
-	GlfwApplication app{};
-	app.init(800, 800, "Flywheel");
+    GlfwApplication app{};
+    app.init(800, 800, "Flywheel");
 
-	Skia skia{};
-	skia.init(800, 800);
+    Skia skia{};
+    skia.init(800, 800);
 
-	SkCanvas* canvas = skia.surface->getCanvas();
+    SkCanvas* canvas = skia.surface->getCanvas();
 
-	SkFont textFont{};
-	textFont.setTypeface(SkTypeface::MakeFromName("Iosevka Fixed Extended", SkFontStyle::Normal()));
-	textFont.setSize(16);
-	textFont.setEmbolden(false);
-	
-	SkPaint paint{};
-	paint.setAntiAlias(true);
-	paint.setColor(SkColors::kRed);
+    SkFont textFont{};
+    textFont.setTypeface(SkTypeface::MakeFromName("Iosevka Fixed Extended", SkFontStyle::Normal()));
+    textFont.setSize(16);
+    textFont.setEmbolden(false);
+    
+    SkPaint paint{};
+    paint.setAntiAlias(true);
+    paint.setColor(SkColors::kRed);
 
-	while (app.is_running())
-	{
-		canvas->drawString("Hello World", 0, textFont.getSpacing(), textFont, paint);
-		canvas->flush();
+    while (app.is_running())
+    {
+        canvas->drawString("Hello World", 0, textFont.getSpacing(), textFont, paint);
+        canvas->flush();
 
-		app.update();
-	}
+        app.update();
+    }
 }
