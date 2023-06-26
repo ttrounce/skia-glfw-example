@@ -14,8 +14,8 @@ set (SKIA_SRC ${PROJECT_SOURCE_DIR}/skia)
 
 add_library (skia STATIC IMPORTED GLOBAL)
 set_target_properties (skia PROPERTIES
-	IMPORTED_LOCATION ${SKIA_SRC}/out/Static/skia.lib
-	INTERFACE_INCLUDE_DIRECTORIES ${SKIA_SRC})
+    IMPORTED_LOCATION ${SKIA_SRC}/out/Static/skia.lib
+    INTERFACE_INCLUDE_DIRECTORIES ${SKIA_SRC})
 
 add_executable(flywheel src/main.cpp)
 target_link_libraries(flywheel glfw fmt skia opengl32)

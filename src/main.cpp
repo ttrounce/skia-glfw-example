@@ -25,41 +25,41 @@
 
 int main()
 {
-	SkFont font;
-	font.setSize(128);
+    SkFont font;
+    font.setSize(128);
 
-	SkFontMetrics metrics{};
-	font.getMetrics(&metrics);
+    SkFontMetrics metrics{};
+    font.getMetrics(&metrics);
 
-	std::string text = "Hello World";
-	int textWidth = font.measureText(text.c_str(), text.size(), SkTextEncoding::kUTF8);
-	int textAscent = (SkScalar) abs(metrics.fAscent);
-	int textHeight = font.getSpacing();
+    std::string text = "Hello World";
+    int textWidth = font.measureText(text.c_str(), text.size(), SkTextEncoding::kUTF8);
+    int textAscent = (SkScalar) abs(metrics.fAscent);
+    int textHeight = font.getSpacing();
 
-	SkBitmap bitmap{};
-	bitmap.allocN32Pixels(textWidth, textHeight);
-	auto canvas = SkCanvas(bitmap);
+    SkBitmap bitmap{};
+    bitmap.allocN32Pixels(textWidth, textHeight);
+    auto canvas = SkCanvas(bitmap);
 
-	auto blob = SkTextBlob::MakeFromString(text.c_str(), font);
+    auto blob = SkTextBlob::MakeFromString(text.c_str(), font);
 
-	SkPaint paint{};
-	paint.setAntiAlias(true);
-	paint.setColor(SkColors::kWhite);
+    SkPaint paint{};
+    paint.setAntiAlias(true);
+    paint.setColor(SkColors::kWhite);
 
-	SkPaint backPaint{};
-	backPaint.setColor(SkColors::kBlue);
+    SkPaint backPaint{};
+    backPaint.setColor(SkColors::kBlue);
 
-	// canvas.drawRect(SkRect::MakeXYWH(0, 0, textWidth, textHeight), backPaint);
-	canvas.drawTextBlob(blob, 0, textAscent, paint);
+    // canvas.drawRect(SkRect::MakeXYWH(0, 0, textWidth, textHeight), backPaint);
+    canvas.drawTextBlob(blob, 0, textAscent, paint);
 
-	canvas.flush();
+    canvas.flush();
 
-	std::ofstream out("test.png", std::ios::binary);
+    std::ofstream out("test.png", std::ios::binary);
 
-	auto pngImage = SkPngEncoder::Encode(nullptr, bitmap.asImage().get(), SkPngEncoder::Options{});
-	out.write((const char*) pngImage->data(), pngImage->size());
-	out.close();
+    auto pngImage = SkPngEncoder::Encode(nullptr, bitmap.asImage().get(), SkPngEncoder::Options{});
+    out.write((const char*) pngImage->data(), pngImage->size());
+    out.close();
 
 
-	return 0;
+    return 0;
 }
