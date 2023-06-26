@@ -1,4 +1,6 @@
 
+#include <GLFW/glfw3.h>
+
 #define SK_GANESH
 #define SK_GL
 #include <include/gpu/ganesh/SkSurfaceGanesh.h>
@@ -23,43 +25,118 @@
 #include <fmt/core.h>
 #include <string>
 
+#define SAMPLES 16
+
+struct Skia
+{
+	std::unique_ptr<SkSurface> surface;
+	std::unique_ptr<GrDirectContext> context;
+
+	Skia() {}
+
+	void init(int w, int h)
+	{
+		auto opts = GrContextOptions{};
+		opts.fAllowMSAAOnNewIntel = true;
+
+		auto interface = GrGLMakeNativeInterface();
+		context = std::unique_ptr<GrDirectContext>(GrDirectContext::MakeGL(interface, opts).release());
+
+		GrGLFramebufferInfo fbi{};
+		fbi.fFBOID = 0;
+		fbi.fFormat = GL_RGBA8;
+
+		auto render_target = GrBackendRenderTarget{
+			w, h,
+			SAMPLES,
+			0,
+			fbi
+		};
+
+		surface = std::unique_ptr<SkSurface>(SkSurfaces::WrapBackendRenderTarget(
+			context.get(),
+			render_target,
+			kBottomLeft_GrSurfaceOrigin,
+			kRGBA_8888_SkColorType,
+			nullptr,
+			nullptr
+		).release());
+
+		if (!surface)
+			throw std::runtime_error{ "SkSurface is null" };
+	}
+};
+
+struct GlfwApplication
+{
+	GLFWwindow* window;
+
+	GlfwApplication(const GlfwApplication& copy) = delete;
+	GlfwApplication& operator=(const GlfwApplication& copy) = delete;
+
+	GlfwApplication() {}
+	~GlfwApplication()
+	{
+		glfwTerminate();
+	}
+
+	void init(int w, int h, const std::string& title)
+	{
+		if (!glfwInit())
+			throw std::runtime_error{ "GLFW no init" };
+
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+		glfwWindowHint(GLFW_SAMPLES, SAMPLES);
+		glfwWindowHint(GLFW_STENCIL_BITS, 0);
+		glfwWindowHint(GLFW_DEPTH_BITS, 0);
+
+		window = glfwCreateWindow(w, h, title.c_str(), nullptr, nullptr);
+
+		if (!window)
+			throw std::runtime_error{ "GLFW no window" };
+
+		glfwMakeContextCurrent(window);
+	}
+
+	bool is_running()
+	{
+		return !glfwWindowShouldClose(window);
+	}
+
+	void update()
+	{
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
+};
+
 int main()
 {
-	SkFont font;
-	font.setSize(128);
+	GlfwApplication app{};
+	app.init(800, 800, "Flywheel");
 
-	SkFontMetrics metrics{};
-	font.getMetrics(&metrics);
+	Skia skia{};
+	skia.init(800, 800);
 
-	std::string text = "Hello World";
-	int textWidth = font.measureText(text.c_str(), text.size(), SkTextEncoding::kUTF8);
-	int textAscent = (SkScalar) abs(metrics.fAscent);
-	int textHeight = font.getSpacing();
+	SkCanvas* canvas = skia.surface->getCanvas();
 
-	SkBitmap bitmap{};
-	bitmap.allocN32Pixels(textWidth, textHeight);
-	auto canvas = SkCanvas(bitmap);
-
-	auto blob = SkTextBlob::MakeFromString(text.c_str(), font);
-
+	SkFont textFont{};
+	textFont.setTypeface(SkTypeface::MakeFromName("Iosevka Fixed Extended", SkFontStyle::Normal()));
+	textFont.setSize(16);
+	textFont.setEmbolden(false);
+	
 	SkPaint paint{};
 	paint.setAntiAlias(true);
-	paint.setColor(SkColors::kWhite);
+	paint.setColor(SkColors::kRed);
 
-	SkPaint backPaint{};
-	backPaint.setColor(SkColors::kBlue);
+	while (app.is_running())
+	{
+		canvas->drawString("Hello World", 0, textFont.getSpacing(), textFont, paint);
+		canvas->flush();
 
-	// canvas.drawRect(SkRect::MakeXYWH(0, 0, textWidth, textHeight), backPaint);
-	canvas.drawTextBlob(blob, 0, textAscent, paint);
-
-	canvas.flush();
-
-	std::ofstream out("test.png", std::ios::binary);
-
-	auto pngImage = SkPngEncoder::Encode(nullptr, bitmap.asImage().get(), SkPngEncoder::Options{});
-	out.write((const char*) pngImage->data(), pngImage->size());
-	out.close();
-
-
-	return 0;
+		app.update();
+	}
 }
